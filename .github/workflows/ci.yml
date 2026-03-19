@@ -192,74 +192,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-  pip-publish:
-    needs:
-      - auto-tag
-    if: ${{ needs.auto-tag.outputs.created-tag != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Display Python version
-        run: python --version
-
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: '2.2.1'
-
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'videohashes/go.mod'
-          cache-dependency-path: 'videohashes/go.sum'
-
-      - name: Install ffmpeg
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-              sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-              choco install -q -y ffmpeg
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-              env HOMEBREW_NO_AUTO_UPDATE=1 brew install ffmpeg
-          fi
-        shell: bash
-
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
-          node-version: '24'
-
-      - name: Intall Poetry Dependencies
-        run: poetry install
-
-      - name: Build All
-        run: poetry run poe build_all
-
-      - name: Prepare to publish python pips.
-        if:  "${{ env.PYPI_TOKEN != '' }}"
-        run: poetry config pypi-token.pypi "$PYPI_TOKEN"
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-
-      - name: publish pip
-        run: poetry publish
-        if:  "${{ env.PYPI_TOKEN != '' }}"
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-
   docker-release:
     needs:
       - auto-tag
@@ -285,7 +217,7 @@ jobs:
         run: |
           export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           export GIT_HASH=$(git rev-parse --verify HEAD)
-          export repo=theporndatabase
+          export repo=blackibanez
           export version=$( echo "${{ needs.auto-tag.outputs.created-tag }}" | grep -e '[0-9.]*')
           docker build . --build-arg "BUILD_DATE=${BUILD_DATE}" --build-arg "GIT_HASH=${GIT_HASH}" --build-arg "PROJECT_VERSION=${version}" -t "ghcr.io/${repo}/namer:${version}" -t "ghcr.io/${repo}/namer:latest"
           docker push "ghcr.io/${repo}/namer:${version}"
