@@ -81,6 +81,12 @@ queryInput.on('keyup', function (e) {
   }
 })
 
+queryType.on('change', function () {
+  const isTmdbSearch = queryType.val() === 'TMDb Movies'
+  phashButton.prop('disabled', isTmdbSearch)
+  phashButton.attr('title', isTmdbSearch ? 'PHash is only available for TPDB searches' : 'PHash')
+})
+
 filesResult.on('click', '.match', function () {
   modalButton = $(this)
   const query = modalButton.data('query')
@@ -124,6 +130,7 @@ refreshFiles.on('click', function () {
 
 searchForm.on('shown.bs.modal', function () {
   queryInput.focus()
+  queryType.trigger('change')
 })
 
 resultForm.on('click', '.rename', rename)

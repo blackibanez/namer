@@ -21,6 +21,7 @@ from namer.command import gather_target_files_from_dir, is_interesting_movie, is
 from namer.fileinfo import FileInfo, parse_file_name
 from namer.metadataapi import __build_url, __evaluate_match, __request_response_json_object, __metadataapi_response_to_data
 from namer.namer import calculate_phash
+from namer.tmdbapi import search_movies as search_tmdb_movies, is_tmdb_enabled
 from namer.videophash import PerceptualHash
 
 
@@ -29,6 +30,7 @@ class SearchType(str, Enum):
     SCENES = 'Scenes'
     MOVIES = 'Movies'
     JAV = 'JAV'
+    TMDB = 'TMDb Movies'
 
 
 def has_no_empty_params(rule: Rule) -> bool:
@@ -135,6 +137,38 @@ def metadataapi_responses_to_webui_response(responses: Dict, config: NamerConfig
     return files
 
 
+def looked_up_fileinfos_to_webui_response(file_infos: List, config: NamerConfig, file: str, phash: Optional[PerceptualHash] = None) -> List:
+    name_parts = parse_file_name(file, config)
+    files = []
+
+    for scene_data in file_infos:
+        if scene_data.original_parsed_filename is None:
+            scene_data.original_parsed_filename = name_parts
+
+        scene = __evaluate_match(scene_data.original_parsed_filename, scene_data, config, phash).as_dict()
+        scene.update(
+            {
+                'name_parts': scene_data.original_parsed_filename,
+                'looked_up': {
+                    'uuid': scene_data.uuid,
+                    'type': scene_data.type.value if scene_data.type else None,
+                    'name': scene_data.name,
+                    'date': scene_data.date,
+                    'poster_url': scene_data.poster_url,
+                    'site': scene_data.site,
+                    'parent': scene_data.parent,
+                    'network': scene_data.network,
+                    'duration': scene_data.duration,
+                    'performers': scene_data.performers,
+                    'source_url': scene_data.source_url,
+                },
+            }
+        )
+        files.append(scene)
+
+    return files
+
+
 def get_search_results(query: str, search_type: SearchType, file: str, config: NamerConfig, page: int = 1) -> Dict:
     """
     Search results for user selection.
@@ -154,6 +188,9 @@ def get_search_results(query: str, search_type: SearchType, file: str, config: N
         responses[url] = __request_response_json_object(url, config)
 
     files = metadataapi_responses_to_webui_response(responses, config, query)
+
+    if (search_type == SearchType.ANY or search_type == SearchType.TMDB) and is_tmdb_enabled(config):
+        files.extend(looked_up_fileinfos_to_webui_response(search_tmdb_movies(query, config, page=page), config, query))
 
     res = {
         'file': file,

@@ -270,6 +270,7 @@ field_info: Dict[str, Tuple[str, Optional[Callable[[Optional[str]], Any]], Optio
     'use_requests_cache': ('namer', to_bool, from_bool),
     'requests_cache_expire_minutes': ('namer', to_int, from_int),
     'override_tpdb_address': ('namer', None, None),
+    'themoviedb_api_key': ('namer', None, None),
     'plex_hack': ('namer', to_bool, from_bool),
     'path_cleanup': ('namer', to_bool, from_bool),
     'search_phash': ('Phash', to_bool, from_bool),

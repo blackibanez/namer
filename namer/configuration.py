@@ -281,6 +281,11 @@ class NamerConfig:
     running server that responds like TPDB to predefined queries.
     """
 
+    themoviedb_api_key: Optional[str] = None
+    """
+    Optional TMDb v3 API key used by the web UI to search regular movies.
+    """
+
     enabled_tagging: bool = False
     """
     Currently metadata pulled from ThePornDB can be added to mp4 files.
@@ -570,6 +575,7 @@ class NamerConfig:
                 'use_requests_cache': self.use_requests_cache,
                 'requests_cache_expire_minutes': self.requests_cache_expire_minutes,
                 'override_tpdb_address': self.override_tpdb_address,
+                'themoviedb_api_key': '*' * len(self.themoviedb_api_key) if self.themoviedb_api_key else None,
                 'plex_hack': self.plex_hack,
                 'convert_container_to': self.convert_container_to,
                 'path_cleanup': self.path_cleanup,

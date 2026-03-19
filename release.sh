@@ -4,7 +4,7 @@ set -eo pipefail
 
 version_bump=$1
 
-repo="ThePornDatabase"
+repo="blackibanez"
 
 found=false
 for bump in 'minor' 'major' 'patch'; do 
@@ -64,9 +64,9 @@ BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 GIT_HASH=$(git rev-parse --verify HEAD)
 docker build . --build-arg "BUILD_DATE=${BUILD_DATE}" --build-arg "GITHASH=${GIT_HASH}" -t "${repo}"/namer:"${new_version}"
 
-echo publishing pip to poetry
-poetry config pypi-token.pypi "${PYPI_TOKEN}"
-poetry publish
+#echo publishing pip to poetry
+#poetry config pypi-token.pypi "${PYPI_TOKEN}"
+#poetry publish
 
 echo pushing new git tag v"${new_version}"
 git commit -m "prepare release v${new_version}"

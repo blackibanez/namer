@@ -150,6 +150,10 @@ requests_cache_expire_minutes = 10
 # Leave this unset unless you are testing a new tpdb endpoint.
 override_tpdb_address =
 
+# Optional TMDb API key used by the web UI for regular movie searches.
+# Create one here: https://www.themoviedb.org/settings/api
+themoviedb_api_key =
+
 # Without modify the enconding where possible covert container (aka file types) to this
 # desired container type ("mp4", "mkv", "avi", ect), plugged in to the command:
 # "ffmpeg -i input.mkv -c copy output.<type>"

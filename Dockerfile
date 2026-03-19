@@ -47,23 +47,25 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 RUN pipx install poetry
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-RUN . /root/.bashrc && nvm install 24
-RUN . /root/.bashrc && npm i -g pnpm@latest-10
+SHELL ["/bin/bash", "-c"]
 
-RUN mkdir /work/
+# Installer NVM et Node + PNPM
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g pnpm@latest-10
+# Project setup
+RUN mkdir /work
 COPY . /work
 WORKDIR /work
-RUN rm -rf /work/namer/__pycache__/ || true \
-    && rm -rf /work/test/__pycache__/ || true \
+ENV CI=true
+# Clean cache and install Python deps
+RUN rm -rf /work/namer/__pycache__ /work/test/__pycache__ \
     && poetry install
 RUN . /root/.bashrc && ( Xvfb :99 & cd /work/ && poetry run poe build_all )
 
 FROM base
 COPY --from=build /work/dist/namer-*.tar.gz /
-RUN pipx install /namer-*.tar.gz \
-    && rm /namer-*.tar.gz
-
+RUN pipx install /namer-*.tar.gz && rm /namer-*.tar.gz
 ARG BUILD_DATE
 ARG GIT_HASH
 ARG PROJECT_VERSION

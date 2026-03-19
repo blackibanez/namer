@@ -28,6 +28,7 @@ from namer.command import get_inplace_name_template_by_type, make_command, set_p
 from namer.fileinfo import FileInfo
 from namer.http import Http, RequestType
 from namer.name_formatter import PartialFormatter
+from namer.tmdbapi import get_movie_details as get_tmdb_movie_details, is_tmdb_uuid
 from namer.videophash import imagehash, PerceptualHash
 
 
@@ -510,6 +511,9 @@ def get_site_name(site_id: str, namer_config: NamerConfig) -> Optional[str]:
 
 
 def get_complete_metadataapi_net_fileinfo(name_parts: Optional[FileInfo], uuid: str, namer_config: NamerConfig) -> Optional[LookedUpFileInfo]:
+    if is_tmdb_uuid(uuid):
+        return get_tmdb_movie_details(uuid, namer_config, name_parts)
+
     url = __build_url(namer_config, uuid=uuid, add_to_collection=namer_config.mark_collected)
     if url:
         file_infos = __get_metadataapi_net_info(url, name_parts, namer_config)
@@ -547,13 +551,16 @@ def match(file_name_parts: Optional[FileInfo], namer_config: NamerConfig, phash:
 
 
 def toggle_collected(metadata: LookedUpFileInfo, config: NamerConfig):
-    if metadata.uuid:
+    if metadata.uuid and not is_tmdb_uuid(metadata.uuid):
         scene_id = metadata.uuid.rsplit('/', 1)[-1]
         scene_type = metadata.type if metadata.type else SceneType.SCENE
         __request_response_json_object(f'{config.override_tpdb_address}/user/collection?scene_id={scene_id}&type={scene_type.value}', config=config, method=RequestType.POST)
 
 
 def share_hash(metadata: LookedUpFileInfo, scene_hash: SceneHash, config: NamerConfig):
+    if is_tmdb_uuid(metadata.uuid):
+        return
+
     data = {
         'type': scene_hash.type.value,
         'hash': scene_hash.hash,

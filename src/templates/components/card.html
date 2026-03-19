@@ -5,6 +5,7 @@
 {% endif %}
 {% set card_width = '11.5rem' %}
 {% set card_img_height = card_width + ' / 2 * 3' %}
+{% set source_url = file['looked_up']['source_url'] if file['looked_up']['source_url'] else 'https://theporndb.net/' ~ file['looked_up']['uuid'] %}
 <div class="card h-100" style="width:{{ card_width }}">
     <div class="position-absolute top-0 start-100 translate-middle-x">
         <span class="translate-middle-y badge rounded-pill text-bg-secondary">{{ match }}</span>
@@ -41,7 +42,7 @@
         {% include 'components/performersBadges.html' %}
     </div>
     <div class="card-footer">
-        <a href="https://theporndb.net/{{ file['looked_up']['uuid'] }}" class="btn btn-secondary" target="_blank">Show</a>
+        <a href="{{ source_url }}" class="btn btn-secondary" target="_blank">Show</a>
         <button class="btn btn-primary float-end rename" data-bs-dismiss="modal" data-scene-id="{{ file['looked_up']['uuid'] }}" data-file="{{ data['file'] }}">
             Select
         </button>
