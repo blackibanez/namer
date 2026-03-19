@@ -154,6 +154,16 @@ override_tpdb_address =
 # Create one here: https://www.themoviedb.org/settings/api
 themoviedb_api_key =
 
+# Optional JSON file used to normalize studio names from TPDB or TMDb.
+# Relative paths are resolved from this config file's directory.
+# Example content:
+# {
+#   "warner": "Warner Bros.",
+#   "warner b.": "Warner Bros.",
+#   "warner bros production": "Warner Bros."
+# }
+studio_mappings_file = studio_mappings.json
+
 # Without modify the enconding where possible covert container (aka file types) to this
 # desired container type ("mp4", "mkv", "avi", ect), plugged in to the command:
 # "ffmpeg -i input.mkv -c copy output.<type>"

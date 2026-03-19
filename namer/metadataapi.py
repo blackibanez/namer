@@ -28,6 +28,7 @@ from namer.command import get_inplace_name_template_by_type, make_command, set_p
 from namer.fileinfo import FileInfo
 from namer.http import Http, RequestType
 from namer.name_formatter import PartialFormatter
+from namer.studio_mapping import normalize_studio_name
 from namer.tmdbapi import get_movie_details as get_tmdb_movie_details, is_tmdb_uuid
 from namer.videophash import imagehash, PerceptualHash
 
@@ -335,11 +336,12 @@ def __json_to_fileinfo(data: dict, url: str, json_response: str, name_parts: Opt
     if 'trailer' in data:
         file_info.trailer_url = data['trailer']
 
-    file_info.site = data['site']['name']
+    file_info.site = normalize_studio_name(data['site']['name'], config)
 
     # clean up messy site metadata from adultdvdempire -> tpdb.
     if file_info.type == SceneType.MOVIE:
         file_info.site = re.sub(r'\(.*\)$', '', file_info.site.strip()).strip()
+        file_info.site = normalize_studio_name(file_info.site, config)
 
     # This is for backwards compatibility of sha hashes only.
     # remove before updating metadata with phash/oshash, replace with full tpdb url, or fully remove, or get a real uuid.

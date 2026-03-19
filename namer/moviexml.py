@@ -12,6 +12,7 @@ from xml.dom.minidom import parseString, Document, Element
 from namer.configuration import NamerConfig
 from namer.command import set_permissions
 from namer.comparison_results import LookedUpFileInfo, Performer
+from namer.tmdbapi import TMDB_UUID_PREFIX, is_tmdb_uuid
 from namer.videophash import PerceptualHash
 
 
@@ -30,6 +31,23 @@ def get_childnode_text(node: Element, name: str) -> Optional[str]:
 
 def get_all_childnode_text(node: Element, name: str) -> List[str]:
     return [x.childNodes[0].data for x in node.getElementsByTagName(name)]
+
+
+def _get_tmdb_numeric_id(info: LookedUpFileInfo) -> Optional[str]:
+    if info.external_id and is_tmdb_uuid(info.uuid):
+        return str(info.external_id)
+
+    if is_tmdb_uuid(info.uuid):
+        return info.uuid.removeprefix(TMDB_UUID_PREFIX)
+
+    return None
+
+
+def _get_theporndb_id(info: LookedUpFileInfo) -> Optional[str]:
+    if is_tmdb_uuid(info.uuid):
+        return None
+
+    return str(info.uuid) if info.uuid else None
 
 
 def parse_movie_xml_file(xml_file: Path) -> LookedUpFileInfo:
@@ -63,6 +81,11 @@ def parse_movie_xml_file(xml_file: Path) -> LookedUpFileInfo:
     theporndbid = get_childnode_text(movie, 'theporndbid')
     if theporndbid:
         info.uuid = theporndbid
+
+    tmdbid = get_childnode_text(movie, 'tmdbid')
+    if tmdbid:
+        info.uuid = f'{TMDB_UUID_PREFIX}{tmdbid}'
+        info.external_id = tmdbid
 
     info.tags = []
     for genre in get_all_childnode_text(movie, 'genre'):
@@ -122,9 +145,17 @@ def write_movie_xml_file(info: LookedUpFileInfo, config: NamerConfig, trailer: O
         add_all_sub_element(doc, root, 'tag', info.tags)
         add_sub_element(doc, root, 'genre', config.default_genre)
 
+    tmdb_numeric_id = _get_tmdb_numeric_id(info)
+    theporndb_id = _get_theporndb_id(info)
+
     add_sub_element(doc, root, 'studio', info.site)
-    add_sub_element(doc, root, 'theporndbid', str(info.uuid))
-    add_sub_element(doc, root, 'theporndbguid', str(info.guid))
+    if theporndb_id:
+        add_sub_element(doc, root, 'theporndbid', theporndb_id)
+        add_sub_element(doc, root, 'theporndbguid', str(info.guid))
+    else:
+        add_sub_element(doc, root, 'theporndbid')
+    if tmdb_numeric_id:
+        add_sub_element(doc, root, 'tmdbid', tmdb_numeric_id)
     add_sub_element(doc, root, 'phoenixadultid')
     add_sub_element(doc, root, 'phoenixadulturlid')
 

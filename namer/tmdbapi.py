@@ -12,6 +12,7 @@ from namer.comparison_results import LookedUpFileInfo, Performer, SceneType
 from namer.configuration import NamerConfig
 from namer.fileinfo import FileInfo
 from namer.http import Http
+from namer.studio_mapping import normalize_studio_name
 
 TMDB_API_BASE_URL = 'https://api.themoviedb.org/3'
 TMDB_SITE_BASE_URL = 'https://www.themoviedb.org'
@@ -53,7 +54,21 @@ def _build_site_url(movie_id: int) -> str:
     return f'{TMDB_SITE_BASE_URL}/movie/{movie_id}'
 
 
-def _parse_tmdb_movie(movie: Dict[str, Any], details: Dict[str, Any], query_url: str, name_parts: Optional[FileInfo]) -> LookedUpFileInfo:
+def _is_adult_movie(movie: Dict[str, Any]) -> bool:
+    return movie.get('adult') is True
+
+
+def _get_primary_studio(details: Dict[str, Any], movie: Dict[str, Any]) -> Optional[str]:
+    production_companies = details.get('production_companies', movie.get('production_companies', []))
+    for company in production_companies:
+        name = company.get('name')
+        if name:
+            return name
+
+    return None
+
+
+def _parse_tmdb_movie(movie: Dict[str, Any], details: Dict[str, Any], query_url: str, config: NamerConfig, name_parts: Optional[FileInfo]) -> LookedUpFileInfo:
     file_info = LookedUpFileInfo()
 
     movie_id = details.get('id', movie.get('id'))
@@ -71,7 +86,7 @@ def _parse_tmdb_movie(movie: Dict[str, Any], details: Dict[str, Any], query_url:
     file_info.name = title
     file_info.description = details.get('overview', movie.get('overview'))
     file_info.date = release_date
-    file_info.site = 'TMDb'
+    file_info.site = normalize_studio_name(_get_primary_studio(details, movie), config)
     file_info.parent = None
     file_info.network = None
     file_info.source_url = _build_site_url(movie_id) if movie_id is not None else None
@@ -119,6 +134,9 @@ def search_movies(query: str, config: NamerConfig, page: int = 1, name_parts: Op
 
     results: List[LookedUpFileInfo] = []
     for movie in payload.get('results', [])[:25]:
+        if not _is_adult_movie(movie):
+            continue
+
         movie_id = movie.get('id')
         if movie_id is None:
             continue
@@ -143,4 +161,4 @@ def get_movie_details(uuid: str, config: NamerConfig, name_parts: Optional[FileI
     if not payload:
         return None
 
-    return _parse_tmdb_movie(payload, payload, details_url, name_parts)
+    return _parse_tmdb_movie(payload, payload, details_url, config, name_parts)

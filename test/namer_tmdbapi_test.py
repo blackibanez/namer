@@ -26,12 +26,22 @@ class UnitTestTMDb(unittest.TestCase):
         search_payload = {
             'results': [
                 {
+                    'id': 604,
+                    'title': 'Safe Movie',
+                    'overview': 'This one should be filtered out.',
+                    'release_date': '2000-01-01',
+                    'poster_path': '/safe.jpg',
+                    'backdrop_path': '/safe-bg.jpg',
+                    'adult': False,
+                },
+                {
                     'id': 603,
                     'title': 'The Matrix',
                     'overview': 'A computer hacker learns the truth.',
                     'release_date': '1999-03-30',
                     'poster_path': '/matrix.jpg',
                     'backdrop_path': '/matrix-bg.jpg',
+                    'adult': True,
                 }
             ]
         }
@@ -43,6 +53,7 @@ class UnitTestTMDb(unittest.TestCase):
             'poster_path': '/matrix.jpg',
             'backdrop_path': '/matrix-bg.jpg',
             'runtime': 136,
+            'production_companies': [{'id': 999, 'name': 'Warner Bros. Pictures'}],
             'genres': [{'id': 878, 'name': 'Science Fiction'}],
             'credits': {
                 'cast': [
@@ -67,9 +78,10 @@ class UnitTestTMDb(unittest.TestCase):
         looked_up = result['files'][0]['looked_up']
         self.assertEqual(looked_up['uuid'], 'tmdb/movie/603')
         self.assertEqual(looked_up['name'], 'The Matrix')
-        self.assertEqual(looked_up['site'], 'TMDb')
+        self.assertEqual(looked_up['site'], 'Warner Bros. Pictures')
         self.assertEqual(looked_up['date'], '1999-03-30')
         self.assertEqual(looked_up['source_url'], 'https://www.themoviedb.org/movie/603')
+        self.assertEqual(mock_get.call_count, 2)
 
     @mock.patch('namer.tmdbapi.Http.get')
     def test_complete_lookup_supports_tmdb_uuid(self, mock_get):
@@ -93,6 +105,7 @@ class UnitTestTMDb(unittest.TestCase):
             self.assertEqual(result.uuid, 'tmdb/movie/603')
             self.assertEqual(result.type.value, 'Movie')
             self.assertEqual(result.name, 'The Matrix')
+            self.assertIsNone(result.site)
             self.assertEqual(result.source_url, 'https://www.themoviedb.org/movie/603')
             self.assertEqual(result.duration, 8160)
 

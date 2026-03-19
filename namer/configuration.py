@@ -286,6 +286,17 @@ class NamerConfig:
     Optional TMDb v3 API key used by the web UI to search regular movies.
     """
 
+    studio_mappings_file: Optional[str] = 'studio_mappings.json'
+    """
+    Optional JSON file mapping studio aliases to a canonical name.
+    Relative paths are resolved from the config file directory when available.
+    """
+
+    studio_mappings: Dict[str, str]
+    """
+    Loaded runtime cache of normalized studio mappings.
+    """
+
     enabled_tagging: bool = False
     """
     Currently metadata pulled from ThePornDB can be added to mp4 files.

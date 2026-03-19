@@ -13,9 +13,9 @@ from loguru import logger
 from namer.fileinfo import parse_file_name
 from namer.metadataapi import match
 from namer.moviexml import parse_movie_xml_file, write_movie_xml_file
-from namer.comparison_results import Performer
+from namer.comparison_results import LookedUpFileInfo, Performer, SceneType
 from test import utils
-from test.utils import environment
+from test.utils import environment, sample_config
 
 
 class UnitTestAsTheDefaultExecution(unittest.TestCase):
@@ -219,6 +219,48 @@ class UnitTestAsTheDefaultExecution(unittest.TestCase):
 </movie>
 """  # noqa: E501
         self.assertEqual(output, expected)
+
+    def test_writing_xml_metadata_for_tmdb_uses_tmdbid(self):
+        info = LookedUpFileInfo()
+        info.uuid = 'tmdb/movie/603'
+        info.external_id = '603'
+        info.guid = '603'
+        info.name = 'The Matrix'
+        info.site = 'Warner Bros. Pictures'
+        info.date = '1999-03-30'
+        info.description = 'A computer hacker learns the truth.'
+        info.source_url = 'https://www.themoviedb.org/movie/603'
+        info.type = SceneType.MOVIE
+
+        output = write_movie_xml_file(info, sample_config())
+
+        self.assertIn('<tmdbid>603</tmdbid>', output)
+        self.assertIn('<theporndbid/>', output)
+        self.assertNotIn('<theporndbid>tmdb/movie/603</theporndbid>', output)
+
+    def test_parsing_xml_metadata_with_tmdbid(self):
+        with tempfile.TemporaryDirectory(prefix='test') as tmpdir:
+            xml_file = Path(tmpdir) / 'movie.nfo'
+            xml_file.write_text(
+                """<?xml version="1.0" encoding="UTF-8"?>
+<movie>
+  <title>The Matrix</title>
+  <studio>Warner Bros. Pictures</studio>
+  <releasedate>1999-03-30</releasedate>
+  <plot>A computer hacker learns the truth.</plot>
+  <art>
+    <poster>https://image.tmdb.org/t/p/w500/matrix.jpg</poster>
+  </art>
+  <tmdbid>603</tmdbid>
+</movie>
+""",
+                encoding='UTF-8',
+            )
+
+            info = parse_movie_xml_file(xml_file)
+            self.assertEqual(info.uuid, 'tmdb/movie/603')
+            self.assertEqual(info.external_id, '603')
+            self.assertEqual(info.site, 'Warner Bros. Pictures')
 
 
 if __name__ == '__main__':

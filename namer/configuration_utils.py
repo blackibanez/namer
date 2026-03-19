@@ -18,6 +18,7 @@ from namer import database
 from namer.configuration import NamerConfig
 from namer.ffmpeg import FFMpeg
 from namer.name_formatter import PartialFormatter
+from namer.studio_mapping import load_studio_mappings
 
 
 def __verify_naming_config(config: NamerConfig, formatter: PartialFormatter) -> bool:
@@ -271,6 +272,7 @@ field_info: Dict[str, Tuple[str, Optional[Callable[[Optional[str]], Any]], Optio
     'requests_cache_expire_minutes': ('namer', to_int, from_int),
     'override_tpdb_address': ('namer', None, None),
     'themoviedb_api_key': ('namer', None, None),
+    'studio_mappings_file': ('namer', None, None),
     'plex_hack': ('namer', to_bool, from_bool),
     'path_cleanup': ('namer', to_bool, from_bool),
     'search_phash': ('Phash', to_bool, from_bool),
@@ -399,6 +401,7 @@ def default_config(user_set: Optional[Path] = None) -> NamerConfig:
     namer_config.config_updater = config
 
     user_config = ConfigUpdater(allow_no_value=True)
+    loaded_config_file: Optional[Path] = None
     cfg_paths = [
         user_set,
         os.environ.get('NAMER_CONFIG'),
@@ -415,6 +418,14 @@ def default_config(user_set: Optional[Path] = None) -> NamerConfig:
 
         if file.is_file():
             user_config.read(file, encoding='UTF-8')
+            loaded_config_file = file.resolve()
             break
 
-    return from_config(user_config, namer_config)
+    if loaded_config_file:
+        namer_config.config_file = loaded_config_file
+    elif user_set:
+        namer_config.config_file = user_set.resolve()
+
+    namer_config = from_config(user_config, namer_config)
+    load_studio_mappings(namer_config)
+    return namer_config
