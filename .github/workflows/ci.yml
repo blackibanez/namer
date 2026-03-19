@@ -16,12 +16,12 @@ jobs:
         python-version: [ '3.11', '3.12', '3.13', '3.14' ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -29,12 +29,12 @@ jobs:
         run: python --version
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
         with:
           poetry-version: '2.2.1'
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'videohashes/go.mod'
           cache-dependency-path: 'videohashes/go.sum'
@@ -50,12 +50,12 @@ jobs:
           fi
         shell: bash
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           node-version: '24'
@@ -70,12 +70,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -83,7 +83,7 @@ jobs:
         run: python --version
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'videohashes/go.mod'
           cache-dependency-path: 'videohashes/go.sum'
@@ -100,16 +100,16 @@ jobs:
         shell: bash
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
         with:
           poetry-version: '2.2.1'
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
           node-version: '24'
@@ -126,7 +126,7 @@ jobs:
       - name: Run coverage
         run: poetry run coverage xml
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
           name: unittest
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -152,14 +152,16 @@ jobs:
     outputs:
       created-tag: ${{ steps.auto-tag.outputs.tag }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -167,29 +169,39 @@ jobs:
         run: python --version
 
       - name: install poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
         with:
           poetry-version: '2.2.1'
 
-      - name: create tag from pyproject version on change.
+      - name: Create tag from pyproject version if missing
         id: auto-tag
-        uses: salsify/action-detect-and-tag-new-version@v2
-        with:
-          version-command: |
-            poetry version -s
+        run: |
+          version="v$(poetry version -s)"
+          if git ls-remote --exit-code --tags origin "refs/tags/${version}" >/dev/null 2>&1; then
+            echo "Tag ${version} already exists, skipping."
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${version}"
+          git push origin "${version}"
+          echo "tag=${version}" >> "$GITHUB_OUTPUT"
 
   project-release:
     needs:
       - auto-tag
     if: ${{ needs.auto-tag.outputs.created-tag != '' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Create GitHub release
-        uses: Roang-zero1/github-create-release-action@master
+        uses: softprops/action-gh-release@v2
         with:
-          created_tag: ${{ needs.auto-tag.outputs.created-tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ needs.auto-tag.outputs.created-tag }}
+          generate_release_notes: true
 
 
   docker-release:
@@ -209,7 +221,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
