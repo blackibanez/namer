@@ -21,11 +21,17 @@ def _resolve_mapping_file(config: NamerConfig) -> Optional[Path]:
     if path.is_absolute():
         return path
 
+    explicit_path = path.resolve()
+    if path.parent != Path('.') and explicit_path.is_file():
+        return explicit_path
+
     config_file = getattr(config, 'config_file', None)
     if config_file:
-        return (config_file.parent / path).resolve()
+        config_relative_path = (config_file.parent / path).resolve()
+        if config_relative_path.is_file():
+            return config_relative_path
 
-    return path.resolve()
+    return explicit_path
 
 
 def load_studio_mappings(config: NamerConfig) -> Dict[str, str]:

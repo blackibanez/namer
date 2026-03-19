@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,6 +27,27 @@ class UnitTestStudioMappings(unittest.TestCase):
             self.assertEqual(normalize_studio_name('Warner B.', config), 'Warner Bros.')
             self.assertEqual(normalize_studio_name('Warner Bros Production', config), 'Warner Bros.')
             self.assertEqual(normalize_studio_name('MGM', config), 'MGM')
+
+    def test_normalize_studio_name_from_explicit_config_path(self):
+        with tempfile.TemporaryDirectory(prefix='test') as tmpdir:
+            tmp_path = Path(tmpdir)
+            config = sample_config()
+            config.config_file = tmp_path / 'data' / '.namer.cfg'
+            config.studio_mappings_file = str(Path('config') / 'studio_mappings.json')
+            (tmp_path / 'config').mkdir()
+            (tmp_path / 'config' / 'studio_mappings.json').write_text(
+                '{"warner":"Warner Bros."}',
+                encoding='UTF-8',
+            )
+
+            previous_cwd = Path.cwd()
+            try:
+                os.chdir(tmp_path)
+                load_studio_mappings(config)
+            finally:
+                os.chdir(previous_cwd)
+
+            self.assertEqual(normalize_studio_name('Warner', config), 'Warner Bros.')
 
     def test_tpdb_studio_mapping_is_applied(self):
         with tempfile.TemporaryDirectory(prefix='test') as tmpdir:

@@ -155,7 +155,8 @@ override_tpdb_address =
 themoviedb_api_key =
 
 # Optional JSON file used to normalize studio names from TPDB or TMDb.
-# Relative paths are resolved from this config file's directory.
+# You can define a path directly here, for example: ./config/studio_mappings.json
+# If only a file name is provided, it is resolved from this config file's directory.
 # Example content:
 # {
 #   "warner": "Warner Bros.",
