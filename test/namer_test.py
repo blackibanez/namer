@@ -6,14 +6,17 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from loguru import logger
 from mutagen.mp4 import MP4
 
+from namer.comparison_results import LookedUpFileInfo, SceneType
 from namer.configuration import NamerConfig
 from namer.configuration_utils import to_ini
-from namer.namer import check_arguments, main, set_permissions
+from namer.command import make_command
+from namer.namer import check_arguments, main, process_file, set_permissions
 from test import utils
 from test.utils import new_ea, sample_config, validate_mp4_tags, environment, FakeTPDB
 
@@ -115,6 +118,39 @@ class UnitTestAsTheDefaultExecution(unittest.TestCase):
             main(['-f', str(target_mp4_file), '-i', '-c', str(cfg_file)])
             output = MP4(target_mp4_file.parent / 'Evil Angel - 2022-01-03 - Carmela Clutch Fabulous Anal 3-Way! [WEBDL-240].mp4')
             self.assertEqual(output.get('\xa9nam'), ['Carmela Clutch: Fabulous Anal 3-Way!'])
+
+    @mock.patch('namer.namer.get_complete_metadataapi_net_fileinfo')
+    def test_manual_site_override_is_applied_to_output_name(self, mock_lookup):
+        config = sample_config()
+        config.enabled_tagging = False
+        config.enabled_poster = False
+        config.write_nfo = False
+        config.min_file_size = 0
+        config.update_permissions_ownership = False
+
+        metadata = LookedUpFileInfo()
+        metadata.type = SceneType.SCENE
+        metadata.name = 'Carmela Clutch Fabulous Anal 3-Way!'
+        metadata.date = '2022-01-03'
+        metadata.site = 'Evil Angel'
+        mock_lookup.return_value = metadata
+
+        with tempfile.TemporaryDirectory(prefix='test') as tmpdir:
+            current = Path(__file__).resolve().parent
+            source_mp4 = current / 'Site.22.01.01.painful.pun.XXX.720p.xpost.mp4'
+            target_mp4 = Path(tmpdir) / 'EvilAngel.22.01.03.Carmela.Clutch.Fabulous.Anal.3-Way!.mp4'
+            shutil.copy(source_mp4, target_mp4)
+
+            command = make_command(target_mp4, config, inplace=True, uuid='123')
+
+            self.assertIsNotNone(command)
+            if command is not None:
+                metadata.original_parsed_filename = command.parsed_file
+                command.manual_site = 'Custom Studio'
+                output = process_file(command)
+
+                self.assertIsNotNone(output)
+                self.assertEqual(output.target_movie_file.name, 'Custom Studio - 2022-01-03 - Carmela Clutch Fabulous Anal 3-Way! [WEBDL-240].mp4')
 
     def test_writing_metadata_all_dirs_files(self):
         """

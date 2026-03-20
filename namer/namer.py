@@ -211,6 +211,9 @@ def process_file(command: Command) -> Optional[Command]:
         target_dir = command.target_directory if command.target_directory is not None else command.target_movie_file.parent
         set_permissions(target_dir, command.config)
         if new_metadata is not None:
+            if command.manual_site is not None and command.manual_site.strip() != '':
+                new_metadata.site = command.manual_site.strip()
+
             if command.config.manual_mode and command.is_auto:
                 failed = move_command_files(command, command.config.failed_dir)
                 if failed is not None and search_results is not None and failed.config.write_namer_failed_log:

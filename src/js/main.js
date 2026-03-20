@@ -151,9 +151,13 @@ deleteButton.on('click', function () {
 })
 
 function rename () {
+  const card = $(this).closest('.card')
+  const studioInput = card.find('.manual-studio')
+
   const data = {
     file: $(this).data('file'),
-    scene_id: $(this).data('scene-id')
+    scene_id: $(this).data('scene-id'),
+    studio: studioInput.val()
   }
 
   Helpers.request('./api/v1/rename', data, function () {

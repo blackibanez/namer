@@ -64,6 +64,11 @@ class Command:
     The _id used to identify video in tpdb
     """
 
+    manual_site: Optional[str] = None
+    """
+    Optional site override supplied manually from the web UI.
+    """
+
     is_auto: bool = True
     """
     If False then it means command was from web ui
@@ -92,6 +97,7 @@ def move_command_files(target: Optional[Command], new_target: Path, is_auto: boo
 
     if output:
         output.tpdb_id = target.tpdb_id
+        output.manual_site = target.manual_site
         output.inplace = target.inplace
         output.write_from_nfos = target.write_from_nfos
 

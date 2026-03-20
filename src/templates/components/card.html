@@ -21,7 +21,7 @@
         {% endif %}
     </div>
     <img class="card-img-top object-fit-cover" style="height:calc({{ card_img_height }})" src="{{ file['looked_up']['poster_url'] }}" alt="{{ file['looked_up']['name'] }}" data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="{% include 'render/logDetails.html' %}">
-    <div class="card-header text-center p-0">{{ file['looked_up']['type'] }}</div>
+    <div class="card-header text-center p-0">{{ file['looked_up']['type'] }}{% if file['looked_up']['source'] %} - {{ file['looked_up']['source'] }}{% endif %}</div>
     <div class="card-body">
         <h5 class="card-title">{{ file['looked_up']['name'] }}</h5>
         <p class="card-text">{{ file['looked_up']['site'] }}</p>
@@ -40,6 +40,10 @@
             <small class="text-muted">{{ file['looked_up']['date'] }}</small>
         </p>
         {% include 'components/performersBadges.html' %}
+        <div class="form-floating mt-2">
+            <input class="form-control manual-studio" type="text" value="{{ file['looked_up']['site'] }}" placeholder="Studio">
+            <label>Studio override</label>
+        </div>
     </div>
     <div class="card-footer">
         <a href="{{ source_url }}" class="btn btn-secondary" target="_blank">Show</a>

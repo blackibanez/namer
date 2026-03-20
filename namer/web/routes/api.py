@@ -92,6 +92,7 @@ def get_routes(config: NamerConfig, command_queue: Queue) -> Blueprint:
             moved_command = move_command_files(command, config.work_dir, is_auto=False)
             if moved_command:
                 moved_command.tpdb_id = data['scene_id']
+                moved_command.manual_site = data.get('studio')
                 command_queue.put(moved_command)  # Todo pass selection
 
         return jsonify(res)
