@@ -61,7 +61,7 @@ ENV CI=true
 # Clean cache and install Python deps
 RUN rm -rf /work/namer/__pycache__ /work/test/__pycache__ \
     && poetry install
-RUN . /root/.bashrc && ( Xvfb :99 & cd /work/ && poetry run poe build_all )
+RUN . /root/.bashrc && ( Xvfb :99 & cd /work/ && pnpm approve-builds && poetry run poe build_all )
 
 FROM base
 COPY --from=build /work/dist/namer-*.tar.gz /
