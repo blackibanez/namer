@@ -524,6 +524,7 @@ class NamerConfig:
             self.set_uid = os.getuid()
             self.set_gid = os.getgid()
 
+        self.studio_mappings = {}
         self.re_cleanup = [re.compile(rf'\b{regex}\b', re.IGNORECASE) for regex in database.re_cleanup]
 
         if hasattr(self, 'watch_dir'):
@@ -587,6 +588,8 @@ class NamerConfig:
                 'requests_cache_expire_minutes': self.requests_cache_expire_minutes,
                 'override_tpdb_address': self.override_tpdb_address,
                 'themoviedb_api_key': '*' * len(self.themoviedb_api_key) if self.themoviedb_api_key else None,
+                'studio_mappings_file': self.studio_mappings_file,
+                'studio_mappings': self.studio_mappings,
                 'plex_hack': self.plex_hack,
                 'convert_container_to': self.convert_container_to,
                 'path_cleanup': self.path_cleanup,

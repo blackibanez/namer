@@ -101,6 +101,19 @@ class UnitTestStudioMappings(unittest.TestCase):
 
             self.assertEqual(lookup.site, 'Warner Bros.')
 
+    def test_to_dict_includes_studio_mapping_configuration(self):
+        with tempfile.TemporaryDirectory(prefix='test') as tmpdir:
+            config = sample_config()
+            config.config_file = Path(tmpdir) / '.namer.cfg'
+            config.studio_mappings_file = 'studio_mappings.json'
+            (Path(tmpdir) / 'studio_mappings.json').write_text('{"Warner B.":"Warner Bros."}', encoding='UTF-8')
+
+            load_studio_mappings(config)
+            config_dict = config.to_dict()
+
+            self.assertEqual(config_dict['Namer Config']['studio_mappings_file'], 'studio_mappings.json')
+            self.assertEqual(config_dict['Namer Config']['studio_mappings'], {'warner b': 'Warner Bros.'})
+
 
 if __name__ == '__main__':
     unittest.main()

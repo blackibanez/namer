@@ -50,7 +50,7 @@ RUN pipx install poetry
 SHELL ["/bin/bash", "-c"]
 
 # Installer NVM et Node + PNPM
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g pnpm@latest-10
 # Project setup

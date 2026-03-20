@@ -21,7 +21,7 @@ from namer.command import gather_target_files_from_dir, is_interesting_movie, is
 from namer.fileinfo import FileInfo, parse_file_name
 from namer.metadataapi import __build_url, __evaluate_match, __request_response_json_object, __metadataapi_response_to_data
 from namer.namer import calculate_phash
-from namer.tmdbapi import search_movies as search_tmdb_movies, is_tmdb_enabled
+from namer.tmdbapi import search_movies as search_tmdb_movies, is_tmdb_enabled, is_tmdb_uuid
 from namer.videophash import PerceptualHash
 
 
@@ -31,6 +31,11 @@ class SearchType(str, Enum):
     MOVIES = 'Movies'
     JAV = 'JAV'
     TMDB = 'TMDb Movies'
+
+
+def _search_result_source(scene_data) -> str:
+    uuid = getattr(scene_data, 'uuid', None)
+    return 'TMDb' if is_tmdb_uuid(uuid) else 'MetadataAPI'
 
 
 def has_no_empty_params(rule: Rule) -> bool:
@@ -123,6 +128,7 @@ def metadataapi_responses_to_webui_response(responses: Dict, config: NamerConfig
                 'looked_up': {
                     'uuid': scene_data.uuid,
                     'type': scene_data.type.value,
+                    'source': _search_result_source(scene_data),
                     'name': scene_data.name,
                     'date': scene_data.date,
                     'poster_url': scene_data.poster_url,
@@ -152,6 +158,7 @@ def looked_up_fileinfos_to_webui_response(file_infos: List, config: NamerConfig,
                 'looked_up': {
                     'uuid': scene_data.uuid,
                     'type': scene_data.type.value if scene_data.type else None,
+                    'source': _search_result_source(scene_data),
                     'name': scene_data.name,
                     'date': scene_data.date,
                     'poster_url': scene_data.poster_url,

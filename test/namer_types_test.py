@@ -51,6 +51,7 @@ class UnitTestAsTheDefaultExecution(unittest.TestCase):
         self.assertFalse(hasattr(config, 'failed_dir'))
         self.assertEqual(config.min_file_size, 300)
         self.assertEqual(config.language, None)
+        self.assertEqual(config.studio_mappings, {})
         if sys.platform != 'win32':
             self.assertEqual(config.set_uid, os.getuid())
             self.assertEqual(config.set_gid, os.getgid())

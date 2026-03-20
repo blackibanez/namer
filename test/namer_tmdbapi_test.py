@@ -80,6 +80,7 @@ class UnitTestTMDb(unittest.TestCase):
         self.assertEqual(looked_up['name'], 'The Matrix')
         self.assertEqual(looked_up['site'], 'Warner Bros. Pictures')
         self.assertEqual(looked_up['date'], '1999-03-30')
+        self.assertEqual(looked_up['source'], 'TMDb')
         self.assertEqual(looked_up['source_url'], 'https://www.themoviedb.org/movie/603')
         self.assertEqual(mock_get.call_count, 2)
 
